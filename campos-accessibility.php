@@ -3,7 +3,7 @@
 Plugin Name: CamposAccessibility
 Plugin URI: https://davidcampos.com.co
 Description: Plugin de accesibilidad web que proporciona herramientas para diferentes tipos de discapacidades.
-Version: 1.0.4
+Version: 1.1.0
 Author: Juan David Valor Campos
 Author URI: https://davidcampos.com.co
 License: GPL v2 or later
@@ -16,7 +16,7 @@ if (!defined('ABSPATH')) {
 class CamposAccessibility {
     private $plugin_path;
     private $plugin_url;
-    private $version = '1.0.4';
+    private $version = '1.1.0';
     private $github_repo = 'Davidkm03/plugin-accesibility';
     private $update_url = 'https://api.github.com/repos/Davidkm03/plugin-accesibility/releases/latest';
 
@@ -29,12 +29,10 @@ class CamposAccessibility {
         add_action('wp_enqueue_scripts', array($this, 'frontend_enqueue_scripts'));
         add_action('wp_ajax_save_campos_accessibility_settings', array($this, 'save_settings'));
         
-        // Agregar verificación de actualizaciones
         add_filter('pre_set_site_transient_update_plugins', array($this, 'check_for_updates'));
         add_filter('plugins_api', array($this, 'plugin_info'), 20, 3);
         add_action('admin_notices', array($this, 'show_update_notice'));
         
-        // Agregar enlace de configuración en la lista de plugins
         add_filter('plugin_action_links_' . plugin_basename(__FILE__), array($this, 'add_settings_link'));
     }
 
@@ -61,23 +59,17 @@ class CamposAccessibility {
     }
 
     public function frontend_enqueue_scripts() {
-        // Encolar jQuery primero
         wp_enqueue_script('jquery');
         
-        // Encolar estilos
         wp_enqueue_style('dashicons');
         wp_enqueue_style('campos-accessibility', $this->plugin_url . 'dashicons.css', array(), $this->version);
         
-        // Encolar nuestro script
         wp_enqueue_script('campos-accessibility', $this->plugin_url . 'campos-accessibility.js', array('jquery'), $this->version, true);
 
-        // Obtener configuración
         $settings = get_option('campos_accessibility_settings', $this->get_default_settings());
         
-        // Pasar configuración al script
         wp_localize_script('campos-accessibility', 'camposAccessibilitySettings', $settings);
         
-        // Agregar script de inicialización
         wp_add_inline_script('campos-accessibility', '
             jQuery(document).ready(function($) {
                 const accessibility = new CamposAccessibility(camposAccessibilitySettings);
@@ -95,7 +87,7 @@ class CamposAccessibility {
             'borderRadius' => '50',
             'showLabels' => true,
             'animations' => true,
-            'buttonStyle' => 'icon-text', // Nuevas opciones: 'icon-only', 'icon-text', 'text-only'
+            'buttonStyle' => 'icon-text',
             'buttonText' => 'Accesibilidad',
             'buttonIcon' => 'dashicons-universal-access',
             'features' => array(
@@ -134,6 +126,9 @@ class CamposAccessibility {
             'borderRadius' => absint($settings['borderRadius']),
             'showLabels' => (bool) $settings['showLabels'],
             'animations' => (bool) $settings['animations'],
+            'buttonStyle' => sanitize_text_field($settings['buttonStyle']),
+            'buttonText' => sanitize_text_field($settings['buttonText']),
+            'buttonIcon' => sanitize_text_field($settings['buttonIcon']),
             'features' => array(
                 'motorDisability' => (bool) $settings['features']['motorDisability'],
                 'blindness' => (bool) $settings['features']['blindness'],
@@ -186,7 +181,6 @@ class CamposAccessibility {
                 return $transient;
             }
 
-            // Verificar que tag_name existe y es una cadena
             if (!isset($data->tag_name) || !is_string($data->tag_name)) {
                 error_log('CamposAccessibility: No valid tag_name in GitHub response');
                 return $transient;
@@ -249,7 +243,6 @@ class CamposAccessibility {
             $res->name = 'CamposAccessibility';
             $res->slug = dirname(plugin_basename(__FILE__));
             
-            // Verificar y procesar la versión
             if (isset($data->tag_name) && is_string($data->tag_name)) {
                 $res->version = trim($data->tag_name, 'v');
             } else {
