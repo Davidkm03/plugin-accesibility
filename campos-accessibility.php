@@ -61,12 +61,29 @@ class CamposAccessibility {
     }
 
     public function frontend_enqueue_scripts() {
+        // Encolar jQuery primero
+        wp_enqueue_script('jquery');
+        
+        // Encolar estilos
         wp_enqueue_style('dashicons');
         wp_enqueue_style('campos-accessibility', $this->plugin_url . 'dashicons.css', array(), $this->version);
+        
+        // Encolar nuestro script
         wp_enqueue_script('campos-accessibility', $this->plugin_url . 'campos-accessibility.js', array('jquery'), $this->version, true);
 
+        // Obtener configuración
         $settings = get_option('campos_accessibility_settings', $this->get_default_settings());
+        
+        // Pasar configuración al script
         wp_localize_script('campos-accessibility', 'camposAccessibilitySettings', $settings);
+        
+        // Agregar script de inicialización
+        wp_add_inline_script('campos-accessibility', '
+            jQuery(document).ready(function($) {
+                const accessibility = new CamposAccessibility(camposAccessibilitySettings);
+                accessibility.init();
+            });
+        ');
     }
 
     private function get_default_settings() {
