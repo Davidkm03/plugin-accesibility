@@ -137,70 +137,122 @@ class CamposAccessibility {
     }
 
     public function check_for_updates($transient) {
-        if (empty($transient->checked)) {
+        try {
+            if (empty($transient->checked)) {
+                return $transient;
+            }
+
+            $response = wp_remote_get($this->update_url, array(
+                'timeout' => 10,
+                'headers' => array(
+                    'Accept' => 'application/vnd.github.v3+json'
+                )
+            ));
+
+            if (is_wp_error($response)) {
+                error_log('CamposAccessibility: Error checking updates - ' . $response->get_error_message());
+                return $transient;
+            }
+
+            $body = wp_remote_retrieve_body($response);
+            if (empty($body)) {
+                error_log('CamposAccessibility: Empty response from GitHub API');
+                return $transient;
+            }
+
+            $data = json_decode($body);
+            if (!is_object($data)) {
+                error_log('CamposAccessibility: Invalid JSON response from GitHub API');
+                return $transient;
+            }
+
+            // Verificar que tag_name existe y es una cadena
+            if (!isset($data->tag_name) || !is_string($data->tag_name)) {
+                error_log('CamposAccessibility: No valid tag_name in GitHub response');
+                return $transient;
+            }
+
+            $latest_version = trim($data->tag_name, 'v');
+            if (empty($latest_version)) {
+                error_log('CamposAccessibility: Empty version number');
+                return $transient;
+            }
+
+            if (version_compare($latest_version, $this->version, '>')) {
+                $plugin_slug = plugin_basename(__FILE__);
+                $transient->response[$plugin_slug] = (object) array(
+                    'slug' => dirname($plugin_slug),
+                    'new_version' => $latest_version,
+                    'url' => 'https://github.com/' . $this->github_repo,
+                    'package' => isset($data->zipball_url) ? $data->zipball_url : ''
+                );
+            }
+
+            return $transient;
+        } catch (Exception $e) {
+            error_log('CamposAccessibility: Exception checking updates - ' . $e->getMessage());
             return $transient;
         }
-
-        $response = wp_remote_get($this->update_url);
-        if (is_wp_error($response)) {
-            return $transient;
-        }
-
-        $body = wp_remote_retrieve_body($response);
-        $data = json_decode($body);
-
-        if (empty($data)) {
-            return $transient;
-        }
-
-        $latest_version = isset($data->tag_name) ? ltrim($data->tag_name, 'v') : '0.0.0';
-        if ($latest_version !== '0.0.0' && version_compare($latest_version, $this->version, '>')) {
-            $plugin_slug = plugin_basename(__FILE__);
-            $transient->response[$plugin_slug] = (object) array(
-                'slug' => dirname($plugin_slug),
-                'new_version' => $latest_version,
-                'url' => 'https://github.com/' . $this->github_repo,
-                'package' => isset($data->zipball_url) ? $data->zipball_url : ''
-            );
-        }
-
-        return $transient;
     }
 
     public function plugin_info($res, $action, $args) {
-        if ($action !== 'plugin_information' || !isset($args->slug) || $args->slug !== dirname(plugin_basename(__FILE__))) {
+        try {
+            if ($action !== 'plugin_information' || !isset($args->slug) || $args->slug !== dirname(plugin_basename(__FILE__))) {
+                return $res;
+            }
+
+            $response = wp_remote_get($this->update_url, array(
+                'timeout' => 10,
+                'headers' => array(
+                    'Accept' => 'application/vnd.github.v3+json'
+                )
+            ));
+
+            if (is_wp_error($response)) {
+                error_log('CamposAccessibility: Error getting plugin info - ' . $response->get_error_message());
+                return $res;
+            }
+
+            $body = wp_remote_retrieve_body($response);
+            if (empty($body)) {
+                error_log('CamposAccessibility: Empty response getting plugin info');
+                return $res;
+            }
+
+            $data = json_decode($body);
+            if (!is_object($data)) {
+                error_log('CamposAccessibility: Invalid JSON response getting plugin info');
+                return $res;
+            }
+
+            $res = new stdClass();
+            $res->name = 'CamposAccessibility';
+            $res->slug = dirname(plugin_basename(__FILE__));
+            
+            // Verificar y procesar la versión
+            if (isset($data->tag_name) && is_string($data->tag_name)) {
+                $res->version = trim($data->tag_name, 'v');
+            } else {
+                $res->version = $this->version;
+            }
+            
+            $res->tested = '6.4';
+            $res->requires = '5.0';
+            $res->author = 'Juan David Valor Campos';
+            $res->author_profile = 'https://davidcampos.com.co';
+            $res->download_link = isset($data->zipball_url) ? $data->zipball_url : '';
+            $res->trunk = isset($data->zipball_url) ? $data->zipball_url : '';
+            $res->last_updated = isset($data->published_at) ? $data->published_at : current_time('mysql');
+            $res->sections = array(
+                'description' => isset($data->body) ? $data->body : 'Plugin de accesibilidad web',
+                'changelog' => $this->get_changelog()
+            );
+
+            return $res;
+        } catch (Exception $e) {
+            error_log('CamposAccessibility: Exception getting plugin info - ' . $e->getMessage());
             return $res;
         }
-
-        $response = wp_remote_get($this->update_url);
-        if (is_wp_error($response)) {
-            return $res;
-        }
-
-        $body = wp_remote_retrieve_body($response);
-        $data = json_decode($body);
-
-        if (empty($data)) {
-            return $res;
-        }
-
-        $res = new stdClass();
-        $res->name = 'CamposAccessibility';
-        $res->slug = dirname(plugin_basename(__FILE__));
-        $res->version = isset($data->tag_name) ? ltrim($data->tag_name, 'v') : '0.0.0';
-        $res->tested = '6.4';
-        $res->requires = '5.0';
-        $res->author = 'Juan David Valor Campos';
-        $res->author_profile = 'https://davidcampos.com.co';
-        $res->download_link = isset($data->zipball_url) ? $data->zipball_url : '';
-        $res->trunk = isset($data->zipball_url) ? $data->zipball_url : '';
-        $res->last_updated = isset($data->published_at) ? $data->published_at : '';
-        $res->sections = array(
-            'description' => isset($data->body) ? $data->body : 'Plugin de accesibilidad web',
-            'changelog' => $this->get_changelog()
-        );
-
-        return $res;
     }
 
     private function get_changelog() {
