@@ -1,17 +1,5 @@
 class CamposAccessibility {
     constructor(config = {}) {
-        if (!config.apiKey) {
-            throw new Error('CamposAccessibility: API key is required');
-        }
-        
-        // Validate API key format (UUID v4)
-        if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(config.apiKey)) {
-            throw new Error('CamposAccessibility: Invalid API key format');
-        }
-        
-        this.apiKey = config.apiKey;
-        this.baseUrl = 'https://api.userway.org/api/open/v0/consumer';
-        this.siteId = null;
         this.initialized = false;
         this.eventHandlers = new Map();
         this.cache = {
