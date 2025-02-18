@@ -45,12 +45,275 @@ class CamposAccessibility {
 
     async init() {
         try {
-            await this.registerSite();
-            await this.enableWidget();
             this.initialized = true;
             this.createWidgetButton();
+            this.initializeAccessibilityEnhancements();
         } catch (error) {
             console.error('Error initializing accessibility widget:', error);
+        }
+    }
+
+    createWidgetButton() {
+        const button = $('<button>', {
+            id: 'campos-accessibility-button',
+            'aria-label': 'Opciones de accesibilidad',
+            class: 'campos-accessibility-button'
+        }).css({
+            position: 'fixed',
+            padding: this.sizes[this.config.buttonSize].padding,
+            background: this.config.primaryColor,
+            color: 'white',
+            border: 'none',
+            borderRadius: this.config.borderRadius,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            zIndex: this.config.zIndex,
+            ...this.positions[this.config.position]
+        });
+
+        const icon = $('<span>', {
+            class: 'dashicons dashicons-universal-access',
+            'aria-hidden': 'true'
+        }).css({
+            fontSize: this.sizes[this.config.buttonSize].iconSize
+        });
+
+        const text = $('<span>', {
+            class: 'text',
+            text: 'Accesibilidad'
+        }).css({
+            fontSize: this.sizes[this.config.buttonSize].fontSize
+        });
+
+        if (!this.config.showLabels) {
+            text.hide();
+        }
+
+        button.append(icon, text);
+
+        if (this.config.animations) {
+            button.css('transition', 'all 0.3s ease');
+            button.hover(() => {
+                button.css('transform', 'scale(1.05)');
+            }, () => {
+                button.css('transform', 'scale(1)');
+            });
+        }
+
+        button.on('click', () => this.toggleMenu());
+
+        $('body').append(button);
+    }
+
+    toggleMenu() {
+        let menu = $('#campos-accessibility-menu');
+        
+        if (menu.length === 0) {
+            menu = this.createMenu();
+            $('body').append(menu);
+        }
+
+        if (menu.is(':visible')) {
+            menu.fadeOut(200);
+        } else {
+            const button = $('#campos-accessibility-button');
+            const buttonPos = button.offset();
+            const menuWidth = parseInt(this.config.menuWidth);
+            
+            let left = this.config.menuPosition === 'right' ? 
+                buttonPos.left - menuWidth + button.outerWidth() : 
+                buttonPos.left;
+
+            menu.css({
+                top: buttonPos.top + button.outerHeight() + 10,
+                left: left
+            }).fadeIn(200);
+        }
+    }
+
+    createMenu() {
+        const menu = $('<div>', {
+            id: 'campos-accessibility-menu',
+            class: 'campos-accessibility-menu',
+            'aria-label': 'Menú de accesibilidad'
+        }).css({
+            position: 'fixed',
+            width: this.config.menuWidth,
+            background: 'white',
+            border: '1px solid #ddd',
+            borderRadius: '8px',
+            boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+            zIndex: this.config.zIndex + 1,
+            display: 'none',
+            padding: '16px'
+        });
+
+        const features = [
+            { id: 'motorDisability', title: 'Navegación por teclado', icon: 'dashicons-admin-generic' },
+            { id: 'blindness', title: 'Lector de pantalla', icon: 'dashicons-visibility' },
+            { id: 'colorBlindness', title: 'Filtros de color', icon: 'dashicons-art' },
+            { id: 'dyslexia', title: 'Ayuda para dislexia', icon: 'dashicons-editor-spellcheck' },
+            { id: 'lowVision', title: 'Aumentar texto', icon: 'dashicons-visibility' },
+            { id: 'cognitive', title: 'Vista simplificada', icon: 'dashicons-welcome-learn-more' },
+            { id: 'seizure', title: 'Reducir animaciones', icon: 'dashicons-warning' },
+            { id: 'adhd', title: 'Modo enfoque', icon: 'dashicons-admin-users' }
+        ];
+
+        features.forEach(feature => {
+            const button = $('<button>', {
+                class: 'campos-feature-button',
+                'data-feature': feature.id,
+                'aria-pressed': 'false'
+            }).css({
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                width: '100%',
+                padding: '8px',
+                margin: '4px 0',
+                border: 'none',
+                borderRadius: '4px',
+                background: 'none',
+                cursor: 'pointer',
+                transition: 'background 0.2s'
+            });
+
+            const icon = $('<span>', {
+                class: `dashicons ${feature.icon}`,
+                'aria-hidden': 'true'
+            });
+
+            const text = $('<span>', {
+                text: feature.title
+            });
+
+            button.append(icon, text);
+
+            button.hover(() => {
+                button.css('background', '#f0f0f0');
+            }, () => {
+                button.css('background', 'none');
+            });
+
+            button.on('click', () => this.toggleFeature(feature.id, button));
+
+            menu.append(button);
+        });
+
+        return menu;
+    }
+
+    toggleFeature(featureId, button) {
+        const isActive = button.attr('aria-pressed') === 'true';
+        button.attr('aria-pressed', (!isActive).toString());
+        
+        switch (featureId) {
+            case 'motorDisability':
+                this.toggleKeyboardNavigation();
+                break;
+            case 'lowVision':
+                this.adjustFontSize(!isActive ? 1.1 : 0.9);
+                break;
+            case 'seizure':
+                $('*').css('animation', !isActive ? 'none' : '');
+                break;
+            case 'cognitive':
+                this.toggleSimplifiedView();
+                break;
+            // Implementar más funcionalidades según sea necesario
+        }
+
+        button.css('background', !isActive ? this.config.secondaryColor : 'none')
+              .css('color', !isActive ? 'white' : 'initial');
+    }
+
+    toggleSimplifiedView() {
+        const body = $('body');
+        const isSimplified = body.hasClass('simplified-view');
+        
+        if (!isSimplified) {
+            // Guardar estilos originales
+            $('*').each(function() {
+                const el = $(this);
+                el.data('original-styles', {
+                    background: el.css('background'),
+                    backgroundImage: el.css('background-image'),
+                    float: el.css('float'),
+                    position: el.css('position'),
+                    fontSize: el.css('font-size'),
+                    lineHeight: el.css('line-height')
+                });
+            });
+
+            // Aplicar vista simplificada
+            body.addClass('simplified-view');
+            
+            // Estilos simplificados
+            const simplifiedStyles = {
+                '*': {
+                    background: 'white !important',
+                    backgroundImage: 'none !important',
+                    color: '#333 !important',
+                    float: 'none !important',
+                    position: 'static !important',
+                    fontSize: '18px !important',
+                    lineHeight: '1.8 !important',
+                    fontFamily: 'Arial, sans-serif !important',
+                    margin: '0 !important',
+                    padding: '0 !important',
+                    border: 'none !important',
+                    boxShadow: 'none !important',
+                    textShadow: 'none !important'
+                },
+                'body': {
+                    maxWidth: '800px !important',
+                    margin: '0 auto !important',
+                    padding: '20px !important'
+                },
+                'h1, h2, h3, h4, h5, h6': {
+                    color: '#000 !important',
+                    margin: '1em 0 0.5em 0 !important',
+                    padding: '0 !important',
+                    borderBottom: '1px solid #333 !important'
+                },
+                'p, li': {
+                    margin: '0.5em 0 !important'
+                },
+                'img': {
+                    display: 'block !important',
+                    maxWidth: '100% !important',
+                    height: 'auto !important',
+                    margin: '1em auto !important'
+                },
+                'a': {
+                    color: '#0066cc !important',
+                    textDecoration: 'underline !important'
+                }
+            };
+
+            // Aplicar estilos simplificados
+            Object.entries(simplifiedStyles).forEach(([selector, styles]) => {
+                $(selector).css(styles);
+            });
+
+            // Ocultar elementos no esenciales
+            $('aside, .sidebar, .ad, .advertisement, .social-share, .related-posts').hide();
+        } else {
+            // Restaurar estilos originales
+            $('*').each(function() {
+                const el = $(this);
+                const originalStyles = el.data('original-styles');
+                if (originalStyles) {
+                    el.css(originalStyles);
+                }
+            });
+
+            body.removeClass('simplified-view');
+            
+            // Mostrar elementos ocultos
+            $('aside, .sidebar, .ad, .advertisement, .social-share, .related-posts').show();
         }
     }
 
