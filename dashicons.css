@@ -197,7 +197,7 @@
 /* Fuente Dashicons */
 @font-face {
     font-family: 'dashicons';
-    src: url('https://wordpress.org/wp-includes/fonts/dashicons.woff2') format('woff2');
+    src: url('fonts/dashicons.woff2') format('woff2');
     font-weight: normal;
     font-style: normal;
 }
