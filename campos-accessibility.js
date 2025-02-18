@@ -53,6 +53,73 @@ class CamposAccessibility {
         }
     }
 
+    initializeAccessibilityEnhancements() {
+        jQuery(document).ready(() => {
+            // Agregar roles ARIA a elementos principales
+            jQuery('header').attr('role', 'banner');
+            jQuery('nav').attr('role', 'navigation');
+            jQuery('main, [role="main"]').attr('role', 'main');
+            jQuery('footer').attr('role', 'contentinfo');
+            jQuery('aside').attr('role', 'complementary');
+            jQuery('form[role="search"]').attr('role', 'search');
+
+            // Mejorar accesibilidad de imágenes
+            jQuery('img:not([alt])').attr('alt', 'Imagen sin descripción');
+
+            // Mejorar accesibilidad de enlaces
+            jQuery('a').each(function() {
+                const $link = jQuery(this);
+                if (!$link.attr('aria-label')) {
+                    $link.attr('aria-label', $link.text().trim() || 'Enlace');
+                }
+            });
+
+            // Mejorar accesibilidad de formularios
+            jQuery('input, select, textarea').each(function() {
+                const $input = jQuery(this);
+                if (!$input.attr('id')) {
+                    const randomId = 'input-' + Math.random().toString(36).substr(2, 9);
+                    $input.attr('id', randomId);
+                }
+                
+                if (!$input.attr('aria-label') && !$input.attr('aria-labelledby')) {
+                    const $label = jQuery(`label[for="${$input.attr('id')}"]`);
+                    if ($label.length) {
+                        $input.attr('aria-labelledby', $label.attr('id') || `label-${$input.attr('id')}`);
+                    } else {
+                        $input.attr('aria-label', $input.attr('placeholder') || $input.attr('name') || 'Campo de entrada');
+                    }
+                }
+            });
+
+            // Agregar skip link
+            if (!jQuery('#skip-to-main-content').length) {
+                const skipLink = jQuery('<a>', {
+                    id: 'skip-to-main-content',
+                    href: '#main-content',
+                    text: 'Saltar al contenido principal'
+                }).css({
+                    position: 'absolute',
+                    top: '-40px',
+                    left: '0',
+                    background: this.config.primaryColor,
+                    color: 'white',
+                    padding: '8px',
+                    zIndex: '100000',
+                    transition: 'top 0.3s'
+                });
+
+                skipLink.focus(function() {
+                    jQuery(this).css('top', '0');
+                }).blur(function() {
+                    jQuery(this).css('top', '-40px');
+                });
+
+                jQuery('body').prepend(skipLink);
+            }
+        });
+    }
+
     createWidgetButton() {
         const button = jQuery('<button>', {
             id: 'campos-accessibility-button',
@@ -122,14 +189,26 @@ class CamposAccessibility {
             const button = jQuery('#campos-accessibility-button');
             const buttonPos = button.offset();
             const menuWidth = parseInt(this.config.menuWidth);
+            const windowHeight = jQuery(window).height();
             
             let left = this.config.menuPosition === 'right' ? 
                 buttonPos.left - menuWidth + button.outerWidth() : 
                 buttonPos.left;
 
+            // Calcular si hay espacio suficiente debajo del botón
+            const spaceBelow = windowHeight - (buttonPos.top + button.outerHeight() + 10);
+            const menuHeight = menu.outerHeight() || 400; // Altura estimada si el menú aún no está visible
+
+            // Determinar si el menú debe aparecer arriba o abajo del botón
+            const showAbove = spaceBelow < menuHeight;
+
             menu.css({
-                top: buttonPos.top + button.outerHeight() + 10,
-                left: left
+                top: showAbove ? 
+                    buttonPos.top - menuHeight - 10 : 
+                    buttonPos.top + button.outerHeight() + 10,
+                left: left,
+                maxHeight: '80vh',
+                overflowY: 'auto'
             }).fadeIn(200);
         }
     }

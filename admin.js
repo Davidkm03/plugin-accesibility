@@ -9,6 +9,7 @@ jQuery(document).ready(function($) {
             primaryColor: $('#campos-primary-color').val(),
             secondaryColor: $('#campos-secondary-color').val(),
             buttonSize: $('#campos-button-size').val(),
+            buttonStyle: $('#campos-button-style').val(),
             borderRadius: $('#campos-border-radius').val() + 'px',
             showLabels: $('#campos-show-labels').is(':checked'),
             animations: $('#campos-animations').is(':checked')
@@ -23,10 +24,23 @@ jQuery(document).ready(function($) {
                       config.buttonSize === 'medium' ? '12px 20px' : '16px 24px'
         });
 
-        if (!config.showLabels) {
-            $preview.find('.text').hide();
-        } else {
-            $preview.find('.text').show();
+        // Actualizar estilo del botón
+        const $icon = $preview.find('.dashicons');
+        const $text = $preview.find('.text');
+
+        switch(config.buttonStyle) {
+            case 'icon-only':
+                $icon.show();
+                $text.hide();
+                break;
+            case 'text-only':
+                $icon.hide();
+                $text.show();
+                break;
+            case 'icon-text':
+                $icon.show();
+                $text.show();
+                break;
         }
 
         if (!config.animations) {
@@ -64,6 +78,7 @@ jQuery(document).ready(function($) {
                 primaryColor: $('#campos-primary-color').val(),
                 secondaryColor: $('#campos-secondary-color').val(),
                 buttonSize: $('#campos-button-size').val(),
+                buttonStyle: $('#campos-button-style').val(),
                 borderRadius: $('#campos-border-radius').val(),
                 showLabels: $('#campos-show-labels').is(':checked'),
                 animations: $('#campos-animations').is(':checked'),
@@ -111,6 +126,7 @@ jQuery(document).ready(function($) {
                 primaryColor: '#2c3e50',
                 secondaryColor: '#3498db',
                 buttonSize: 'medium',
+                buttonStyle: 'icon-text',
                 borderRadius: '50',
                 showLabels: true,
                 animations: true,
@@ -131,6 +147,7 @@ jQuery(document).ready(function($) {
             $('#campos-primary-color').wpColorPicker('color', defaultSettings.primaryColor);
             $('#campos-secondary-color').wpColorPicker('color', defaultSettings.secondaryColor);
             $('#campos-button-size').val(defaultSettings.buttonSize);
+            $('#campos-button-style').val(defaultSettings.buttonStyle);
             $('#campos-border-radius').val(defaultSettings.borderRadius);
             $('#campos-show-labels').prop('checked', defaultSettings.showLabels);
             $('#campos-animations').prop('checked', defaultSettings.animations);
