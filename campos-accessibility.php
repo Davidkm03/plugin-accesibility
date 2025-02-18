@@ -3,7 +3,7 @@
 Plugin Name: CamposAccessibility
 Plugin URI: https://davidcampos.com.co
 Description: Plugin de accesibilidad web que proporciona herramientas para diferentes tipos de discapacidades.
-Version: 1.1.0
+Version: 1.1.2
 Author: Juan David Valor Campos
 Author URI: https://davidcampos.com.co
 License: GPL v2 or later
@@ -16,7 +16,7 @@ if (!defined('ABSPATH')) {
 class CamposAccessibility {
     private $plugin_path;
     private $plugin_url;
-    private $version = '1.1.0';
+    private $version = '1.1.2';
     private $github_repo = 'Davidkm03/plugin-accesibility';
     private $update_url = 'https://api.github.com/repos/Davidkm03/plugin-accesibility/releases/latest';
 
@@ -118,26 +118,28 @@ class CamposAccessibility {
     }
 
     private function sanitize_settings($settings) {
+        $default_settings = $this->get_default_settings();
+        
         return array(
-            'position' => sanitize_text_field($settings['position']),
-            'primaryColor' => sanitize_hex_color($settings['primaryColor']),
-            'secondaryColor' => sanitize_hex_color($settings['secondaryColor']),
-            'buttonSize' => sanitize_text_field($settings['buttonSize']),
-            'borderRadius' => absint($settings['borderRadius']),
-            'showLabels' => (bool) $settings['showLabels'],
-            'animations' => (bool) $settings['animations'],
-            'buttonStyle' => sanitize_text_field($settings['buttonStyle']),
-            'buttonText' => sanitize_text_field($settings['buttonText']),
-            'buttonIcon' => sanitize_text_field($settings['buttonIcon']),
+            'position' => isset($settings['position']) ? sanitize_text_field($settings['position']) : $default_settings['position'],
+            'primaryColor' => isset($settings['primaryColor']) ? sanitize_hex_color($settings['primaryColor']) : $default_settings['primaryColor'],
+            'secondaryColor' => isset($settings['secondaryColor']) ? sanitize_hex_color($settings['secondaryColor']) : $default_settings['secondaryColor'],
+            'buttonSize' => isset($settings['buttonSize']) ? sanitize_text_field($settings['buttonSize']) : $default_settings['buttonSize'],
+            'borderRadius' => isset($settings['borderRadius']) ? absint($settings['borderRadius']) : $default_settings['borderRadius'],
+            'showLabels' => isset($settings['showLabels']) ? (bool) $settings['showLabels'] : $default_settings['showLabels'],
+            'animations' => isset($settings['animations']) ? (bool) $settings['animations'] : $default_settings['animations'],
+            'buttonStyle' => isset($settings['buttonStyle']) ? sanitize_text_field($settings['buttonStyle']) : $default_settings['buttonStyle'],
+            'buttonText' => isset($settings['buttonText']) ? sanitize_text_field($settings['buttonText']) : $default_settings['buttonText'],
+            'buttonIcon' => isset($settings['buttonIcon']) ? sanitize_text_field($settings['buttonIcon']) : $default_settings['buttonIcon'],
             'features' => array(
-                'motorDisability' => (bool) $settings['features']['motorDisability'],
-                'blindness' => (bool) $settings['features']['blindness'],
-                'colorBlindness' => (bool) $settings['features']['colorBlindness'],
-                'dyslexia' => (bool) $settings['features']['dyslexia'],
-                'lowVision' => (bool) $settings['features']['lowVision'],
-                'cognitive' => (bool) $settings['features']['cognitive'],
-                'seizure' => (bool) $settings['features']['seizure'],
-                'adhd' => (bool) $settings['features']['adhd']
+                'motorDisability' => isset($settings['features']['motorDisability']) ? (bool) $settings['features']['motorDisability'] : $default_settings['features']['motorDisability'],
+                'blindness' => isset($settings['features']['blindness']) ? (bool) $settings['features']['blindness'] : $default_settings['features']['blindness'],
+                'colorBlindness' => isset($settings['features']['colorBlindness']) ? (bool) $settings['features']['colorBlindness'] : $default_settings['features']['colorBlindness'],
+                'dyslexia' => isset($settings['features']['dyslexia']) ? (bool) $settings['features']['dyslexia'] : $default_settings['features']['dyslexia'],
+                'lowVision' => isset($settings['features']['lowVision']) ? (bool) $settings['features']['lowVision'] : $default_settings['features']['lowVision'],
+                'cognitive' => isset($settings['features']['cognitive']) ? (bool) $settings['features']['cognitive'] : $default_settings['features']['cognitive'],
+                'seizure' => isset($settings['features']['seizure']) ? (bool) $settings['features']['seizure'] : $default_settings['features']['seizure'],
+                'adhd' => isset($settings['features']['adhd']) ? (bool) $settings['features']['adhd'] : $default_settings['features']['adhd']
             )
         );
     }
