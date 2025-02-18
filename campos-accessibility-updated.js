@@ -456,47 +456,95 @@ class CamposAccessibility {
     }
 
     toggleMenu() {
-        let menu = jQuery('#campos-accessibility-menu');
-        
-        if (menu.length === 0) {
-            menu = this.createMenu();
-            jQuery('body').append(menu);
-        }
-
-        const isVisible = menu.is(':visible');
-        const button = this.widgetButton;
-        
-        button.attr('aria-expanded', (!isVisible).toString());
-
-        if (isVisible) {
-            menu.fadeOut(200);
-        } else {
-            const buttonPos = button.offset();
-            const menuWidth = parseInt(this.config.menuWidth);
-            const windowHeight = jQuery(window).height();
+        try {
+            let menu = jQuery('#campos-accessibility-menu');
             
-            let left = this.config.menuPosition === 'right' ? 
-                buttonPos.left - menuWidth + button.outerWidth() : 
-                buttonPos.left;
+            if (menu.length === 0) {
+                menu = this.createMenu();
+                jQuery('body').append(menu);
+            }
 
-            // Calcular si hay espacio suficiente debajo del botón
-            const spaceBelow = windowHeight - (buttonPos.top + button.outerHeight() + 10);
-            const menuHeight = menu.outerHeight() || 400; // Altura estimada si el menú aún no está visible
+            const isVisible = menu.is(':visible');
+            const button = this.widgetButton;
+            
+            button.attr('aria-expanded', (!isVisible).toString());
 
-            // Determinar si el menú debe aparecer arriba o abajo del botón
-            const showAbove = spaceBelow < menuHeight;
+            if (isVisible) {
+                menu.fadeOut(200);
+            } else {
+                const buttonPos = button.offset();
+                const menuWidth = parseInt(this.config.menuWidth);
+                const windowHeight = jQuery(window).height();
+                const windowWidth = jQuery(window).width();
+                
+                // Calculate menu position
+                let left = this.config.menuPosition === 'right' ? 
+                    buttonPos.left - menuWidth + button.outerWidth() : 
+                    buttonPos.left;
 
-            menu.css({
-                top: showAbove ? 
-                    buttonPos.top - menuHeight - 10 : 
-                    buttonPos.top + button.outerHeight() + 10,
-                left: Math.max(0, Math.min(left, window.innerWidth - menuWidth)),
-                maxHeight: '80vh',
-                overflowY: 'auto'
-            }).fadeIn(200);
+                // Ensure menu stays within window bounds horizontally
+                left = Math.max(10, Math.min(left, windowWidth - menuWidth - 10));
 
-            // Add keyboard trap for menu
-            this.trapFocus(menu);
+                // Get menu height (or estimate if not visible)
+                menu.css('visibility', 'hidden').show();
+                const menuHeight = menu.outerHeight() || 400;
+                menu.hide().css('visibility', '');
+
+                // Determine optimal vertical position
+                let top;
+                const buttonHeight = button.outerHeight();
+                const spaceAbove = buttonPos.top - 10; // Space above button
+                const spaceBelow = windowHeight - (buttonPos.top + buttonHeight + 10); // Space below button
+
+                if (spaceBelow >= menuHeight || spaceBelow >= spaceAbove) {
+                    // Show below if enough space or more space below than above
+                    top = buttonPos.top + buttonHeight + 10;
+                } else {
+                    // Show above
+                    top = Math.max(10, buttonPos.top - menuHeight - 10);
+                }
+
+                // Apply position with smooth animation
+                menu.css({
+                    position: 'fixed',
+                    top: top,
+                    left: left,
+                    maxHeight: Math.min(menuHeight, windowHeight - 20),
+                    overflowY: 'auto',
+                    zIndex: this.config.zIndex + 1,
+                    opacity: 0,
+                    display: 'block'
+                }).animate({
+                    opacity: 1
+                }, 200);
+
+                // Add keyboard trap for menu
+                this.trapFocus(menu);
+
+                // Add click outside handler
+                setTimeout(() => {
+                    jQuery(document).on('click.accessibility-menu', (e) => {
+                        if (!menu.is(e.target) && 
+                            !button.is(e.target) && 
+                            menu.has(e.target).length === 0 && 
+                            button.has(e.target).length === 0) {
+                            this.toggleMenu();
+                            jQuery(document).off('click.accessibility-menu');
+                        }
+                    });
+                }, 0);
+
+                // Add window resize handler
+                jQuery(window).on('resize.accessibility-menu', this.debounce(() => {
+                    if (menu.is(':visible')) {
+                        this.toggleMenu();
+                        this.toggleMenu();
+                    }
+                }, 150));
+            }
+        } catch (error) {
+            console.error('Error toggling menu:', error);
+            throw error;
         }
     }
 
