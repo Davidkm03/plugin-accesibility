@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CamposAccessibility - Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .content {
+            margin-bottom: 30px;
+        }
+        
+        .section {
+            margin-bottom: 20px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 20px auto;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 400px;
+            margin: 20px auto;
+        }
+        
+        input, textarea {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Demo de CamposAccessibility</h1>
+        <p>Plugin de accesibilidad web desarrollado por Juan David Valor Campos</p>
+    </div>
+
+    <div class="content">
+        <div class="section">
+            <h2>Características de Accesibilidad</h2>
+            <p>Esta página demuestra varias características de accesibilidad que pueden ser mejoradas por el plugin:</p>
+            <ul>
+                <li>Imágenes sin texto alternativo</li>
+                <li>Formularios sin etiquetas apropiadas</li>
+                <li>Contraste de colores</li>
+                <li>Navegación por teclado</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>Ejemplo de Imagen</h2>
+            <img src="https://via.placeholder.com/400x200" alt="">
+        </div>
+
+        <div class="section">
+            <h2>Formulario de Contacto</h2>
+            <form>
+                <input type="text" placeholder="Nombre">
+                <input type="email" placeholder="Email">
+                <textarea placeholder="Mensaje" rows="4"></textarea>
+                <button type="submit">Enviar</button>
+            </form>
+        </div>
+
+        <div class="section">
+            <h2>Contenido con Bajo Contraste</h2>
+            <p style="color: #999;">Este texto tiene un contraste bajo que puede ser difícil de leer.</p>
+        </div>
+    </div>
+
+    <script src="campos-accessibility.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const accessibility = new CamposAccessibility({
+                apiKey: '13a938ab-a133-438d-813a-504920d3cfc8'
+            });
+            accessibility.init();
+        });
+    </script>
+</body>
+</html>

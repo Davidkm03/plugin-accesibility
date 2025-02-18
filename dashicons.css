@@ -1,0 +1,203 @@
+.dashicons {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    font-size: 20px;
+    line-height: 1;
+    font-family: dashicons;
+    text-decoration: inherit;
+    font-weight: 400;
+    font-style: normal;
+    vertical-align: top;
+    text-align: center;
+    transition: color .1s ease-in;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Iconos específicos usando códigos de Dashicons */
+.dashicons-universal-access:before { content: "\f483"; }
+.dashicons-editor-textcolor:before { content: "\f215"; }
+.dashicons-admin-appearance:before { content: "\f100"; }
+.dashicons-editor-spellcheck:before { content: "\f210"; }
+.dashicons-admin-links:before { content: "\f103"; }
+.dashicons-editor-paragraph:before { content: "\f476"; }
+.dashicons-book-alt:before { content: "\f331"; }
+.dashicons-visibility:before { content: "\f177"; }
+.dashicons-arrow-up-alt2:before { content: "\f343"; }
+.dashicons-admin-generic:before { content: "\f111"; }
+.dashicons-keyboard:before { content: "\f327"; }
+.dashicons-admin-users:before { content: "\f110"; }
+.dashicons-megaphone:before { content: "\f488"; }
+.dashicons-format-image:before { content: "\f128"; }
+.dashicons-art:before { content: "\f309"; }
+.dashicons-search:before { content: "\f179"; }
+.dashicons-welcome-learn-more:before { content: "\f118"; }
+.dashicons-editor-justify:before { content: "\f214"; }
+.dashicons-warning:before { content: "\f534"; }
+.dashicons-controls-pause:before { content: "\f523"; }
+.dashicons-image-rotate:before { content: "\f531"; }
+.dashicons-microphone:before { content: "\f482"; }
+.dashicons-plus:before { content: "\f132"; }
+.dashicons-minus:before { content: "\f460"; }
+.dashicons-desktop:before { content: "\f472"; }
+.dashicons-move:before { content: "\f545"; }
+
+/* Estilos del menú de accesibilidad */
+#campos-accessibility-menu {
+    position: fixed;
+    bottom: 80px;
+    right: 20px;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    z-index: 99998;
+    width: 350px;
+    max-height: 80vh;
+    overflow-y: auto;
+    font-family: Arial, sans-serif;
+}
+
+#campos-accessibility-menu h3 {
+    margin: 0 0 15px 0;
+    color: #2c3e50;
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.accessibility-categories {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.category {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 12px;
+}
+
+.category h4 {
+    margin: 0 0 10px 0;
+    color: #2c3e50;
+    font-size: 14px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.category h4 .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+}
+
+.category-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.accessibility-btn {
+    padding: 8px 12px;
+    background: #3498db;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.3s ease;
+    font-size: 13px;
+    line-height: 1.4;
+    width: 100%;
+    text-align: left;
+}
+
+.accessibility-btn:hover {
+    background: #2980b9;
+}
+
+.accessibility-btn .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#campos-accessibility-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--primary-color, #2c3e50);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius, 50px);
+    padding: var(--button-padding, 12px 20px);
+    cursor: pointer;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 99999;
+    font-family: var(--font-family, Arial, sans-serif);
+    font-size: var(--font-size, 14px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+}
+
+#campos-accessibility-btn:hover {
+    background: var(--primary-color-hover, #34495e);
+    transform: scale(1.05);
+}
+
+/* Estilos para el scroll */
+#campos-accessibility-menu::-webkit-scrollbar {
+    width: 8px;
+}
+
+#campos-accessibility-menu::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+#campos-accessibility-menu::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+#campos-accessibility-menu::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Estilos para el footer */
+#campos-accessibility-menu footer {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+    font-size: 12px;
+    color: #666;
+    text-align: center;
+}
+
+#campos-accessibility-menu footer a {
+    color: var(--secondary-color, #3498db);
+    text-decoration: none;
+}
+
+#campos-accessibility-menu footer a:hover {
+    text-decoration: underline;
+}
+
+/* Fuente Dashicons */
+@font-face {
+    font-family: 'dashicons';
+    src: url('https://wordpress.org/wp-includes/fonts/dashicons.woff2') format('woff2');
+    font-weight: normal;
+    font-style: normal;
+}
