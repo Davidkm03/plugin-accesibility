@@ -95,6 +95,9 @@ class CamposAccessibility {
             'borderRadius' => '50',
             'showLabels' => true,
             'animations' => true,
+            'buttonStyle' => 'icon-text', // Nuevas opciones: 'icon-only', 'icon-text', 'text-only'
+            'buttonText' => 'Accesibilidad',
+            'buttonIcon' => 'dashicons-universal-access',
             'features' => array(
                 'motorDisability' => true,
                 'blindness' => true,

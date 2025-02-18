@@ -45,6 +45,15 @@
                 </div>
 
                 <div class="campos-form-group">
+                    <label for="campos-button-style">Estilo del Botón</label>
+                    <select id="campos-button-style" name="buttonStyle" class="campos-setting">
+                        <option value="icon-only" <?php selected($settings['buttonStyle'], 'icon-only'); ?>>Solo Icono</option>
+                        <option value="icon-text" <?php selected($settings['buttonStyle'], 'icon-text'); ?>>Icono y Texto</option>
+                        <option value="text-only" <?php selected($settings['buttonStyle'], 'text-only'); ?>>Solo Texto</option>
+                    </select>
+                </div>
+
+                <div class="campos-form-group">
                     <label for="campos-border-radius">Radio del Borde (px)</label>
                     <input type="number" id="campos-border-radius" name="borderRadius" class="campos-setting" value="<?php echo esc_attr($settings['borderRadius']); ?>" min="0" max="100">
                 </div>
