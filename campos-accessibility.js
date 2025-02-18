@@ -539,32 +539,404 @@ class CamposAccessibility {
             document.removeEventListener('mousemove', this.handleMagnifier);
             this.magnifier = null;
         } else {
+            // Crear el contenedor de la lupa
             this.magnifier = document.createElement('div');
             this.magnifier.className = 'accessibility-magnifier';
             this.magnifier.style.cssText = `
                 position: fixed;
-                width: 150px;
-                height: 150px;
+                width: 200px;
+                height: 200px;
                 border: 2px solid #333;
                 border-radius: 50%;
                 pointer-events: none;
                 z-index: 99999;
-                background: white;
+                overflow: hidden;
                 display: none;
             `;
+            
+            // Crear el contenido magnificado
+            this.magnifiedContent = document.createElement('div');
+            this.magnifiedContent.style.cssText = `
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                transform: scale(2);
+                transform-origin: center center;
+                background: white;
+            `;
+            
+            this.magnifier.appendChild(this.magnifiedContent);
             document.body.appendChild(this.magnifier);
             
             this.handleMagnifier = (e) => {
                 const x = e.clientX;
                 const y = e.clientY;
+                const rect = this.magnifier.getBoundingClientRect();
+                
+                // Actualizar posición de la lupa
                 this.magnifier.style.display = 'block';
-                this.magnifier.style.left = `${x - 75}px`;
-                this.magnifier.style.top = `${y - 75}px`;
-                this.magnifier.style.transform = 'scale(2)';
+                this.magnifier.style.left = `${x - rect.width/2}px`;
+                this.magnifier.style.top = `${y - rect.height/2}px`;
+                
+                // Capturar y magnificar el contenido
+                const viewportContent = document.elementFromPoint(x, y);
+                if (viewportContent && viewportContent !== this.magnifier) {
+                    const clone = viewportContent.cloneNode(true);
+                    clone.style.transform = 'scale(2)';
+                    clone.style.transformOrigin = 'center center';
+                    this.magnifiedContent.innerHTML = '';
+                    this.magnifiedContent.appendChild(clone);
+                }
             };
             
             document.addEventListener('mousemove', this.handleMagnifier);
         }
+    }
+
+    adjustFontSize(factor) {
+        const elements = document.getElementsByTagName('*');
+        let currentScale = parseFloat(document.documentElement.style.getPropertyValue('--font-scale') || '1');
+        
+        // Aplicar nuevo factor
+        currentScale *= factor;
+        
+        // Limitar el rango de escala (0.5 a 2.0)
+        currentScale = Math.max(0.5, Math.min(2.0, currentScale));
+        
+        // Guardar la escala actual
+        document.documentElement.style.setProperty('--font-scale', currentScale);
+        
+        // Actualizar tamaños de fuente
+        for (let element of elements) {
+            const computedStyle = window.getComputedStyle(element);
+            const originalSize = parseFloat(computedStyle.fontSize);
+            element.style.fontSize = `${originalSize * currentScale}px`;
+        }
+        
+        // Actualizar botones de control de texto
+        const increaseBtn = document.querySelector('[data-action="increase-text"]');
+        const decreaseBtn = document.querySelector('[data-action="decrease-text"]');
+        
+        if (increaseBtn) {
+            increaseBtn.disabled = currentScale >= 2.0;
+        }
+        if (decreaseBtn) {
+            decreaseBtn.disabled = currentScale <= 0.5;
+        }
+        
+        // Mostrar indicador de escala
+        this.showScaleIndicator(currentScale);
+    }
+    
+    showScaleIndicator(scale) {
+        let indicator = document.getElementById('font-scale-indicator');
+        if (!indicator) {
+            indicator = document.createElement('div');
+            indicator.id = 'font-scale-indicator';
+            indicator.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(0, 0, 0, 0.8);
+                color: white;
+                padding: 8px 16px;
+                border-radius: 20px;
+                font-size: 14px;
+                z-index: 99999;
+                transition: opacity 0.3s ease;
+            `;
+            document.body.appendChild(indicator);
+        }
+        
+        indicator.textContent = `Tamaño de texto: ${Math.round(scale * 100)}%`;
+        indicator.style.opacity = '1';
+        
+        clearTimeout(this.scaleIndicatorTimeout);
+        this.scaleIndicatorTimeout = setTimeout(() => {
+            indicator.style.opacity = '0';
+        }, 2000);
+    }
+
+    toggleKeyboardNavigation() {
+        const html = document.documentElement;
+        if (html.classList.contains('keyboard-navigation')) {
+            html.classList.remove('keyboard-navigation');
+            document.removeEventListener('keydown', this.handleKeyboardNavigation);
+            this.removeKeyboardIndicator();
+        } else {
+            html.classList.add('keyboard-navigation');
+            this.createKeyboardIndicator();
+            this.handleKeyboardNavigation = (e) => {
+                // Teclas de navegación
+                const key = e.key.toLowerCase();
+                
+                // Atajos globales
+                if (e.ctrlKey && e.altKey) {
+                    switch (key) {
+                        case 'a': // Abrir/cerrar menú de accesibilidad
+                            e.preventDefault();
+                            this.toggleAccessibilityMenu();
+                            break;
+                        case 'm': // Activar/desactivar modo de alto contraste
+                            e.preventDefault();
+                            this.toggleHighContrast();
+                            break;
+                        case 'f': // Aumentar tamaño de fuente
+                            e.preventDefault();
+                            this.adjustFontSize(1.1);
+                            break;
+                        case 'd': // Disminuir tamaño de fuente
+                            e.preventDefault();
+                            this.adjustFontSize(0.9);
+                            break;
+                    }
+                }
+
+                // Navegación por elementos
+                if (e.altKey) {
+                    switch (key) {
+                        case 'h': // Ir al encabezado siguiente
+                            e.preventDefault();
+                            this.navigateToElement('heading');
+                            break;
+                        case 'l': // Ir al enlace siguiente
+                            e.preventDefault();
+                            this.navigateToElement('link');
+                            break;
+                        case 'b': // Ir al botón siguiente
+                            e.preventDefault();
+                            this.navigateToElement('button');
+                            break;
+                        case 'i': // Ir al campo de entrada siguiente
+                            e.preventDefault();
+                            this.navigateToElement('input');
+                            break;
+                    }
+                }
+
+                // Actualizar indicador de teclas
+                this.updateKeyboardIndicator(e);
+            };
+            
+            document.addEventListener('keydown', this.handleKeyboardNavigation);
+            this.showKeyboardHelp();
+        }
+    }
+
+    createKeyboardIndicator() {
+        if (!document.getElementById('keyboard-indicator')) {
+            const indicator = document.createElement('div');
+            indicator.id = 'keyboard-indicator';
+            indicator.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: rgba(0, 0, 0, 0.8);
+                color: white;
+                padding: 8px 16px;
+                border-radius: 4px;
+                font-size: 14px;
+                z-index: 99999;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            `;
+            document.body.appendChild(indicator);
+        }
+    }
+
+    removeKeyboardIndicator() {
+        const indicator = document.getElementById('keyboard-indicator');
+        if (indicator) {
+            indicator.remove();
+        }
+    }
+
+    updateKeyboardIndicator(event) {
+        const indicator = document.getElementById('keyboard-indicator');
+        if (indicator) {
+            const key = event.key;
+            const modifiers = [];
+            
+            if (event.ctrlKey) modifiers.push('Ctrl');
+            if (event.altKey) modifiers.push('Alt');
+            if (event.shiftKey) modifiers.push('Shift');
+            
+            const keyDisplay = modifiers.length > 0 ? 
+                `${modifiers.join('+')}+${key}` : key;
+            
+            indicator.textContent = `Tecla: ${keyDisplay}`;
+            indicator.style.opacity = '1';
+            
+            clearTimeout(this.indicatorTimeout);
+            this.indicatorTimeout = setTimeout(() => {
+                indicator.style.opacity = '0';
+            }, 2000);
+        }
+    }
+
+    navigateToElement(type) {
+        const selectors = {
+            heading: 'h1, h2, h3, h4, h5, h6',
+            link: 'a[href]',
+            button: 'button, input[type="button"], input[type="submit"]',
+            input: 'input:not([type="button"]):not([type="submit"]), textarea, select'
+        };
+        
+        const selector = selectors[type];
+        if (!selector) return;
+        
+        const elements = Array.from(document.querySelectorAll(selector));
+        if (elements.length === 0) return;
+        
+        // Obtener el elemento actualmente enfocado
+        const focused = document.activeElement;
+        let nextIndex = 0;
+        
+        if (focused) {
+            const currentIndex = elements.indexOf(focused);
+            if (currentIndex !== -1) {
+                nextIndex = (currentIndex + 1) % elements.length;
+            }
+        }
+        
+        elements[nextIndex].focus();
+        this.highlightFocusedElement(elements[nextIndex]);
+    }
+
+    highlightFocusedElement(element) {
+        // Remover resaltado anterior
+        const previous = document.querySelector('.keyboard-focus-highlight');
+        if (previous) {
+            previous.classList.remove('keyboard-focus-highlight');
+        }
+        
+        // Agregar nuevo resaltado
+        element.classList.add('keyboard-focus-highlight');
+        
+        // Asegurar que el elemento es visible
+        element.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+        });
+    }
+
+    showKeyboardHelp() {
+        const helpDialog = document.createElement('div');
+        helpDialog.className = 'keyboard-help-dialog';
+        helpDialog.innerHTML = `
+            <div class="keyboard-help-content">
+                <h3>Atajos de Teclado</h3>
+                <div class="shortcuts-grid">
+                    <div class="shortcut-group">
+                        <h4>Navegación Global</h4>
+                        <ul>
+                            <li><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>A</kbd> - Abrir/cerrar menú de accesibilidad</li>
+                            <li><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>M</kbd> - Activar/desactivar alto contraste</li>
+                            <li><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>F</kbd> - Aumentar tamaño de fuente</li>
+                            <li><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>D</kbd> - Disminuir tamaño de fuente</li>
+                        </ul>
+                    </div>
+                    <div class="shortcut-group">
+                        <h4>Navegación por Elementos</h4>
+                        <ul>
+                            <li><kbd>Alt</kbd> + <kbd>H</kbd> - Ir al siguiente encabezado</li>
+                            <li><kbd>Alt</kbd> + <kbd>L</kbd> - Ir al siguiente enlace</li>
+                            <li><kbd>Alt</kbd> + <kbd>B</kbd> - Ir al siguiente botón</li>
+                            <li><kbd>Alt</kbd> + <kbd>I</kbd> - Ir al siguiente campo de entrada</li>
+                        </ul>
+                    </div>
+                </div>
+                <button class="close-help">Cerrar</button>
+            </div>
+        `;
+        
+        helpDialog.querySelector('.close-help').addEventListener('click', () => {
+            helpDialog.remove();
+        });
+        
+        document.body.appendChild(helpDialog);
+        
+        // Estilos para el diálogo
+        const style = document.createElement('style');
+        style.textContent = `
+            .keyboard-help-dialog {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.8);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 100000;
+            }
+            
+            .keyboard-help-content {
+                background: white;
+                padding: 20px;
+                border-radius: 8px;
+                max-width: 600px;
+                width: 90%;
+                max-height: 80vh;
+                overflow-y: auto;
+            }
+            
+            .shortcuts-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 20px;
+                margin: 20px 0;
+            }
+            
+            .shortcut-group h4 {
+                margin: 0 0 10px 0;
+                color: #2c3e50;
+            }
+            
+            .shortcut-group ul {
+                list-style: none;
+                padding: 0;
+                margin: 0;
+            }
+            
+            .shortcut-group li {
+                margin-bottom: 8px;
+            }
+            
+            kbd {
+                background: #f8f9fa;
+                border: 1px solid #dee2e6;
+                border-radius: 3px;
+                padding: 2px 6px;
+                font-family: monospace;
+            }
+            
+            .close-help {
+                background: #2c3e50;
+                color: white;
+                border: none;
+                padding: 8px 16px;
+                border-radius: 4px;
+                cursor: pointer;
+                display: block;
+                margin: 20px auto 0;
+            }
+            
+            .close-help:hover {
+                background: #34495e;
+            }
+            
+            .keyboard-focus-highlight {
+                outline: 3px solid #3498db !important;
+                outline-offset: 2px !important;
+            }
+        `;
+        
+        document.head.appendChild(style);
     }
 
     toggleSimplifiedView() {
